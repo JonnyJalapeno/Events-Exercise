@@ -1,18 +1,26 @@
 ﻿using System;
+using System.Collections;
+using System.Collections.Immutable;
+using System.Diagnostics.Metrics;
+using System.Numerics;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices.ObjectiveC;
-using System.Collections;
-using System.Numerics;
-using System.Collections.Immutable;
 
 namespace EventExercise
 {
+    public interface IHaveCoatStorage
+    {
+        public void AddCoat(Coat coat);
+        public void RemoveCoat(Coat coat);
+
+        public IReadOnlyList<Coat> RetrieveCoats();
+    }
     public class GuestEventArgs : EventArgs
     { 
-        public CoatRoom CoatRoom { get; set; }
+        public IHaveCoatStorage CoatRoom { get; set; }
         public Guest Guest { get; set; }
 
-        public GuestEventArgs(CoatRoom coatroom, Guest guest)
+        public GuestEventArgs(IHaveCoatStorage coatroom, Guest guest)
         {
             CoatRoom = coatroom;
             Guest = guest;
@@ -73,12 +81,16 @@ namespace EventExercise
         }
     }
 
-    public class CoatRoom
+    public class CoatRoom : IHaveCoatStorage
     {
         private readonly List<Guest> guestList = new List<Guest>();
         private readonly List<Coat> coatList = new List<Coat>();
-        public event EventHandler<GuestEventArgs>? GuestCameEvent;
-        public event EventHandler<GuestEventArgs>? GuestLeftEvent;
+
+        public delegate void GuestEventHandler<IHaveCoatStorage>(IHaveCoatStorage sender, GuestEventArgs e);
+
+
+        public event GuestEventHandler<IHaveCoatStorage>? GuestCameEvent;
+        public event GuestEventHandler<IHaveCoatStorage>? GuestLeftEvent;
 
         public void GuestCame(Guest guest)
         {
@@ -122,43 +134,42 @@ namespace EventExercise
 
     public static class Attendant
     {
-        public static void GreetGuestAndTakeCoat(object? sender, GuestEventArgs e)
+        public static void GreetGuestAndTakeCoat(IHaveCoatStorage? sender, GuestEventArgs e)
         {
-            if (sender is CoatRoom coatroom)
+            ArgumentNullException.ThrowIfNull(sender);
+            Guest guest = e.Guest;
+            Console.WriteLine($"Greetings {guest.Name}. Do you have any coat that I can take?");
+            if (guest.Coat != null)
             {
-                Guest guest = e.Guest;
-                Console.WriteLine($"Greetings {guest.Name}. Do you have any coat that I can take?");
-                if (guest.Coat != null)
-                {
-                    coatroom.AddCoat(guest.Coat);
-                    guest.LeaveCoat();
-                    Console.WriteLine("Your coat has been deposited in the coat room. Enjoy your visit!");
-                }
-                else
-                {
-                    Console.WriteLine("Enjoy your visit!");
-                }
+                sender.AddCoat(guest.Coat);
+                guest.LeaveCoat();
+                Console.WriteLine("Your coat has been deposited in the coat room. Enjoy your visit!");
             }
+            else
+            {
+                Console.WriteLine("Enjoy your visit!");
+            }
+            
         }
 
-        public static void FarewellGuestAndRemoveCoat(object? sender, GuestEventArgs e)
+        public static void FarewellGuestAndRemoveCoat(IHaveCoatStorage? sender, GuestEventArgs e)
         {
-            if (sender is CoatRoom coatroom) { 
-                Guest guest = e.Guest;
-                Console.WriteLine($"Welcome back {guest.Name}. Do you have any coat we need to return to you?");
-                IReadOnlyList<Coat> coats = coatroom.RetrieveCoats();
-                Coat? coat = coats.FirstOrDefault(x => x.CoatOwner == guest.Name);
-                if (coat != null)
-                {
-                    coatroom.RemoveCoat(coat);
-                    guest.GetCoat(coat);
-                    Console.WriteLine("Here's your coat.Goodbye and we hope you've enjoyed the visit!");
-                }
-                else
-                {
-                    Console.WriteLine("Goodbye, and we hope you've enjoyed the visit!");
-                }
+            ArgumentNullException.ThrowIfNull(sender);
+            Guest guest = e.Guest;
+            Console.WriteLine($"Welcome back {guest.Name}. Do you have any coat we need to return to you?");
+            IReadOnlyList<Coat> coats = sender.RetrieveCoats();
+            Coat? coat = coats.FirstOrDefault(x => x.CoatOwner == guest.Name);
+            if (coat != null)
+            {
+                sender.RemoveCoat(coat);
+                guest.GetCoat(coat);
+                Console.WriteLine("Here's your coat.Goodbye and we hope you've enjoyed the visit!");
             }
+            else
+            {
+                Console.WriteLine("Goodbye, and we hope you've enjoyed the visit!");
+            }
+            
         }
     }
 
@@ -179,8 +190,6 @@ namespace EventExercise
             coatroom.GuestLeft(guest1);
         }
     }
-
-
 }
 
 
