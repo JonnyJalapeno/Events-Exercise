@@ -86,11 +86,11 @@ namespace EventExercise
         private readonly List<Guest> guestList = new List<Guest>();
         private readonly List<Coat> coatList = new List<Coat>();
 
-        public delegate void GuestEventHandler<IHaveCoatStorage>(IHaveCoatStorage sender, GuestEventArgs e);
+        public delegate void GuestEventHandler(IHaveCoatStorage sender, GuestEventArgs e);
 
 
-        public event GuestEventHandler<IHaveCoatStorage>? GuestCameEvent;
-        public event GuestEventHandler<IHaveCoatStorage>? GuestLeftEvent;
+        public event GuestEventHandler? GuestCameEvent;
+        public event GuestEventHandler? GuestLeftEvent;
 
         public void GuestCame(Guest guest)
         {
