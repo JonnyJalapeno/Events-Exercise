@@ -250,16 +250,24 @@ namespace EventExercise.Tests
         }
 
         [Test]
+        public void GuestEventArgs_ThrowOnNull()
+        {
+            Assert.Throws<ArgumentNullException>(() => new GuestEventArgs(null,new Guest("Alice")));
+        }
+
+        [Test]
         public void GreetGuestAndTakeCoat_ThrowsOnNullCoatRoom()
         {
-            var args = new GuestEventArgs(null, new Guest("Alice"));
+            CoatRoom coatroom = new CoatRoom();
+            var args = new GuestEventArgs(coatroom, new Guest("Alice"));
             Assert.Throws<ArgumentNullException>(() => Attendant.GreetGuestAndTakeCoat(null, args));
         }
 
         [Test]
         public void FarewellGuestAndRemoveCoat_ThrowsOnNullCoatRoom()
         {
-            var args = new GuestEventArgs(null, new Guest("Alice"));
+            CoatRoom coatroom = new CoatRoom();
+            var args = new GuestEventArgs(coatroom, new Guest("Alice"));
             Assert.Throws<ArgumentNullException>(() => Attendant.FarewellGuestAndRemoveCoat(null, args));
         }
     }

@@ -1,10 +1,6 @@
 using System;
-using System.Collections;
-using System.Collections.Immutable;
-using System.Diagnostics.Metrics;
-using System.Numerics;
-using System.Runtime.CompilerServices;
-using System.Runtime.InteropServices.ObjectiveC;
+using System.Collections.Generic;
+using System.Linq;
 
 namespace EventExercise
 {
@@ -16,12 +12,15 @@ namespace EventExercise
         public IReadOnlyList<Coat> RetrieveCoats();
     }
     public class GuestEventArgs : EventArgs
-    { 
-        public IHaveCoatStorage? CoatRoom { get; set; }
-        public Guest Guest { get; set; }
+    {
+        public IHaveCoatStorage CoatRoom { get; }
+        public Guest Guest { get; }
 
-        public GuestEventArgs(IHaveCoatStorage? coatroom, Guest guest)
+        public GuestEventArgs(IHaveCoatStorage coatroom, Guest guest)
         {
+            ArgumentNullException.ThrowIfNull(coatroom);
+            ArgumentNullException.ThrowIfNull(guest);
+
             CoatRoom = coatroom;
             Guest = guest;
         }
@@ -34,6 +33,9 @@ namespace EventExercise
 
         public Coat(string coatOwner, string coatType)
         {
+            ArgumentNullException.ThrowIfNull(coatOwner);
+            ArgumentNullException.ThrowIfNull(coatType);
+
             this.coatType = coatType;
             this.coatOwner = coatOwner;
         }
@@ -48,6 +50,7 @@ namespace EventExercise
         private Coat? coat;
         public Guest(string name, string? coatType = null)
         {
+            ArgumentNullException.ThrowIfNull(name);
             this.name = name;
             if (coatType != null)
             {
@@ -77,6 +80,7 @@ namespace EventExercise
 
         public void GetCoat(Coat coat)
         {
+            ArgumentNullException.ThrowIfNull(coat);
             this.coat = coat;
         }
     }
@@ -91,12 +95,14 @@ namespace EventExercise
 
         public void GuestCame(Guest guest)
         {
+            ArgumentNullException.ThrowIfNull(guest);
             guestList.Add(guest);
             OnGuestCame(guest);
         }
 
         public void GuestLeft(Guest guest)
         {
+            ArgumentNullException.ThrowIfNull(guest);
             guestList.Remove(guest);
             OnGuestLeft(guest);
         }
@@ -109,6 +115,7 @@ namespace EventExercise
 
         public void RemoveCoat(Coat coat)
         {
+            ArgumentNullException.ThrowIfNull(coat);
             coatList.Remove(coat);
         }
 
@@ -119,11 +126,13 @@ namespace EventExercise
 
         protected virtual void OnGuestCame(Guest guest)
         {
+            ArgumentNullException.ThrowIfNull(guest);
             GuestEventArgs guestEventArgs = new GuestEventArgs(this, guest);
             GuestCameEvent?.Invoke(this, guestEventArgs);
         }
         protected virtual void OnGuestLeft(Guest guest)
         {
+            ArgumentNullException.ThrowIfNull(guest);
             GuestEventArgs guestEventArgs = new GuestEventArgs(this, guest);
             GuestLeftEvent?.Invoke(this, guestEventArgs);
         }
@@ -133,6 +142,9 @@ namespace EventExercise
     {
         public static void GreetGuestAndTakeCoat(object? sender, GuestEventArgs e)
         {
+            ArgumentNullException.ThrowIfNull(sender);
+            ArgumentNullException.ThrowIfNull(e);
+            ArgumentNullException.ThrowIfNull(e.Guest);
             ArgumentNullException.ThrowIfNull(e.CoatRoom);
             Guest guest = e.Guest;
             Console.WriteLine($"Greetings {guest.Name}. Do you have any coat that I can take?");
@@ -151,6 +163,9 @@ namespace EventExercise
 
         public static void FarewellGuestAndRemoveCoat(object? sender, GuestEventArgs e)
         {
+            ArgumentNullException.ThrowIfNull(sender);
+            ArgumentNullException.ThrowIfNull(e);
+            ArgumentNullException.ThrowIfNull(e.Guest);
             ArgumentNullException.ThrowIfNull(e.CoatRoom);
             Guest guest = e.Guest;
             Console.WriteLine($"Welcome back {guest.Name}. Do you have any coat we need to return to you?");
@@ -160,7 +175,7 @@ namespace EventExercise
             {
                 e.CoatRoom.RemoveCoat(coat);
                 guest.GetCoat(coat);
-                Console.WriteLine("Here's your coat.Goodbye and we hope you've enjoyed the visit!");
+                Console.WriteLine("Here's your coat. Goodbye and we hope you've enjoyed the visit!");
             }
             else
             {
